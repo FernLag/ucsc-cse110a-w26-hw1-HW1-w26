@@ -33,12 +33,12 @@ CHARS = list(alphabet_string)
 
 class Token(Enum):
     ADD    = "ADD"
-    MULT   = "MULT"
+    MULT   = "MULT"     #added the INCR and SEMI tokens
     ASSIGN = "ASSIGN"
     SEMI   = "SEMI"
     ID     = "ID"
     NUM    = "NUM"
-
+    INCR = "INCR"
 
 class Lexeme:
     def __init__(self, token:Token, value:str) -> None:
@@ -65,8 +65,13 @@ class NaiveScanner:
 
         # Scan for the single character tokens
         if self.ss.peek_char() == "+":
-            self.ss.eat_char()
-            return Lexeme(Token.ADD, "+")
+            if len(self.ss.string) >= 2 and self.ss.string[1] == "+":       #used for the case of when there are two + in a row so they won't each be considered as an add
+                self.ss.eat_char()
+                self.ss.eat_char()
+                return Lexeme(Token.INCR, "++")
+            else:
+                self.ss.eat_char()
+                return Lexeme(Token.ADD, "+")
         
         if self.ss.peek_char() == "*":
             self.ss.eat_char()
@@ -76,25 +81,70 @@ class NaiveScanner:
             self.ss.eat_char()
             return Lexeme(Token.ASSIGN, "=")
 
-        # Scan for the multi character tokens
-        if self.ss.peek_char() in CHARS:
+        if self.ss.peek_char() == ";":          #also put them here 
+            self.ss.eat_char()
+            return Lexeme(Token.SEMI, ";")
+
+        if self.ss.peek_char() == "++":
+            self.ss.eat_char()
+            return Lexeme(Token.INCR, "++")
+
+    
+
+        if self.ss.peek_char() in CHARS:        #for ID requirement, it consumes the leading digits 
             value = ""
-            while self.ss.peek_char() in CHARS:
-                value += self.ss.peek_char()
-                self.ss.eat_char()
+            while True:
+                c = self.ss.peek_char()
+                if c in CHARS or c in NUMS:
+                    value += c
+                    self.ss.eat_char()
+                else:
+                    break
             return Lexeme(Token.ID, value)
 
-        if self.ss.peek_char() in NUMS:
+
+        if self.ss.peek_char() in NUMS:             #checks if there is a decimal and if so there has to be  a digit after
             value = ""
             while self.ss.peek_char() in NUMS:
                 value += self.ss.peek_char()
                 self.ss.eat_char()
+            if self.ss.peek_char() == ".":
+                value += "."
+                self.ss.eat_char()
+
+                if self.ss.peek_char() not in NUMS:
+                    raise ScannerException()
+
+                while self.ss.peek_char() in NUMS: 
+                    value += self.ss.peek_char()
+                    self.ss.eat_char()
+
+                if self.ss.peek_char() == ".":
+                    raise ScannerException()
             return Lexeme(Token.NUM, value)
+        raise ScannerException()
+
+
+
+
+        # Scan for the multi character tokens
+       # if self.ss.peek_char() in CHARS:
+        #    value = ""
+         #   while self.ss.peek_char() in CHARS:
+          #      value += self.ss.peek_char()
+           #     self.ss.eat_char()
+           # return Lexeme(Token.ID, value)
+
+        #if self.ss.peek_char() in NUMS:
+         #   value = ""
+          #  while self.ss.peek_char() in NUMS:
+           #     value += self.ss.peek_char()
+            #    self.ss.eat_char()
+            #return Lexeme(Token.NUM, value)
 
         # if we cannot match a token, throw an exception
         # you should implement a line number to pass
         # to the exeception
-        raise ScannerException()
     
 
 if __name__ == "__main__":
