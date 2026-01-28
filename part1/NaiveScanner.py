@@ -104,6 +104,20 @@ class NaiveScanner:
                     break
             return Lexeme(Token.ID, value)
 
+        
+        if self.ss.peek_char() == ".":
+            if len(self.ss.string) >= 2 and self.ss.string[1] in NUMS:
+                value = "."
+                self.ss.eat_char()
+
+                while self.ss.peek_char():
+                    value += self.ss.peek_char()
+                    self.ss.eat_char()
+
+                return Lexeme(Token.NUM, value)
+            else:
+                raise ScannerException()
+
 
         if self.ss.peek_char() in NUMS:             #checks if there is a decimal and if so there has to be  a digit after
             value = ""
