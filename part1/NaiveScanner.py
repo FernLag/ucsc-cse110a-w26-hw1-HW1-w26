@@ -110,9 +110,12 @@ class NaiveScanner:
                 value = "."
                 self.ss.eat_char()
 
-                while self.ss.peek_char():
+                while self.ss.peek_char() in NUMS:
                     value += self.ss.peek_char()
                     self.ss.eat_char()
+
+                if self.ss.peek_char() == ".":
+                    raise ScannerException()
 
                 return Lexeme(Token.NUM, value)
             else:
