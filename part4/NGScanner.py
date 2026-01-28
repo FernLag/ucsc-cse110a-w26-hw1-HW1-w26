@@ -21,7 +21,41 @@ class NGScanner:
         
     def token(self) -> Optional[Lexeme]:
         # Implement me!
-        pass
+
+        if not hasattr(self, "istring") or len(self.istring) == 0:  #basic check similar to previous part
+            return None
+
+        if not hasattr(self, "master_re"):
+            group = []
+            self.ng_names = []          #these help to map from the groups to the tokens, have a main named group
+            self.ng_tokens = []
+            self.ng_action = []
+            for (tok, pattern, action) in self.tokens:
+                name = tok.value
+                self.ng_names.append(name)
+                self.ng_tokens.append(tok)
+                self.ng_action.append(action)
+
+                group.append("(?P<" + name + ">" + pattern + ")")       
+            self.master_re = re.compile("|".join(group))            #compile the main group
+
+        m = self.master_re.match(self.istring)      #match one token at start
+        if m is None:
+            raise ScannerException()
+
+        name = m.lastgroup      #see which tetx had matched 
+        text = m.group(0) 
+
+        self.istring = self.istring[len(text):]
+        i = self.ng_names.index(name)
+        lex = Lexeme(self.ng_tokens[i], text)
+        lex = self.ng_action[i](lex)
+        if lex.token == Token.IGNORE:
+            return self.token()
+
+        return lex
+
+        #pass
 
 if __name__ == "__main__":
 
