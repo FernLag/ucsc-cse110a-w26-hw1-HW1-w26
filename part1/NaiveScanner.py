@@ -24,7 +24,7 @@ class StringStream:
         self.string = self.string[1:]
 
 # put characters to ignore in this array        
-IGNORE = [" ", "\n"]
+IGNORE = [" ", "\n", "\t", "\r"]
 NUMS   = [str(x) for x in range(10)]
 
 # From: https://www.adamsmith.haus/python/answers/how-to-make-a-list-of-the-alphabet-in-python
@@ -52,11 +52,13 @@ class NaiveScanner:
 
     def __init__(self, input_string:str) -> None:
         self.ss = StringStream(input_string)
-
+        self.line = 1
     def token(self) -> Optional[Lexeme]:
 
         # First handle the ignore case
         while self.ss.peek_char() in IGNORE:
+            if self.ss.peek_char() == "\n":
+                self.line += 1
             self.ss.eat_char()
 
         # If there is nothing to return, return None
@@ -122,7 +124,7 @@ class NaiveScanner:
                 if self.ss.peek_char() == ".":
                     raise ScannerException()
             return Lexeme(Token.NUM, value)
-        raise ScannerException()
+        raise ScannerException(f"Error on line {self.line}")
 
 
 
