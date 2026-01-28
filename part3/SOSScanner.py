@@ -22,7 +22,28 @@ class SOSScanner:
 
     def token(self) -> Optional[Lexeme]:
         # Implement me!
-        pass
+
+        if len(self.istring) == 0:      #basic check to see if length is 0
+            return None
+
+        for (tok, pattern, action) in self.tokens:
+            m = re.match(pattern, self.istring)     #match the start of each string 
+            if m is None: 
+                continue        #if token doesn't match then continue 
+            text = m.group(0)   #prefix match with token 
+
+            self.istring = self.istring[len(text):]
+
+            lex = Lexeme(tok, text) #create a Lexeme for the match and then apply the action
+            lex = action(lex)
+
+            if lex.token == Token.IGNORE:
+                return self.token()
+
+            return lex
+        raise ScannerException()
+
+        #pass
 
 if __name__ == "__main__":
 
